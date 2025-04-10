@@ -33,79 +33,12 @@ const map = new maplibregl.Map({
 // Initialize our handles manager
 let handleManager: HandleManager;
 
-// Generate a unique ID for handles
-function generateId(): string {
-    return 'handle-' + Math.random().toString(36).substring(2, 9);
-}
-
 // Get a random position near the center of the map
 function getRandomPosition() {
     const center = map.getCenter();
     const randomLon = center.lng + (Math.random() - 0.5) * 0.05;
     const randomLat = center.lat + (Math.random() - 0.5) * 0.05;
     return { lon: randomLon, lat: randomLat };
-}
-
-// Create a handle with the specified type
-function createHandle(type: Handle['type'], shape: Handle['shape']): Handle {
-    return {
-        id: generateId(),
-        type,
-        shape,
-        position: getRandomPosition(),
-        color: getColorForType(type),
-        size: 1,
-        cursor: getCursorForType(type),
-        visible: true,
-        draggable: true,
-        constraints: getConstraintsForType(type)
-    };
-}
-
-// Get a color based on handle type
-function getColorForType(type: Handle['type']): string {
-    const colorMap: Record<Handle['type'], string> = {
-        'resize': '#ff5733',
-        'rotate': '#33bbff',
-        'move': '#33ff57',
-        'curve': '#b533ff',
-        'label': '#ffbb33',
-        'snap': '#ff33bb'
-    };
-    return colorMap[type];
-}
-
-// Get a cursor type based on handle type
-function getCursorForType(type: Handle['type']): string {
-    const cursorMap: Record<Handle['type'], string> = {
-        'resize': 'nwse-resize',
-        'rotate': 'crosshair',
-        'move': 'move',
-        'curve': 'pointer',
-        'label': 'text',
-        'snap': 'cell'
-    };
-    return cursorMap[type];
-}
-
-// Get constraints based on handle type
-function getConstraintsForType(type: Handle['type']): Handle['constraints'] {
-    switch (type) {
-        case 'resize':
-            return { proportional: true };
-        case 'move':
-            return {};
-        case 'rotate':
-            return {};
-        case 'curve':
-            return {};
-        case 'label':
-            return {};
-        case 'snap':
-            return { snapToGrid: true };
-        default:
-            return {};
-    }
 }
 
 // Wait for the map to load before initializing the handle manager
@@ -124,27 +57,33 @@ map.on('load', () => {
 
     // Add event listeners to demonstration buttons
     document.getElementById('add-resize-handle')?.addEventListener('click', () => {
-        handleManager.addHandle(createHandle('resize', 'square'));
+        const handle = handleManager.createHandle('resize', 'square', getRandomPosition());
+        handleManager.addHandle(handle);
     });
 
     document.getElementById('add-rotate-handle')?.addEventListener('click', () => {
-        handleManager.addHandle(createHandle('rotate', 'circle'));
+        const handle = handleManager.createHandle('rotate', 'circle', getRandomPosition());
+        handleManager.addHandle(handle);
     });
 
     document.getElementById('add-move-handle')?.addEventListener('click', () => {
-        handleManager.addHandle(createHandle('move', 'circle'));
+        const handle = handleManager.createHandle('move', 'circle', getRandomPosition());
+        handleManager.addHandle(handle);
     });
 
     document.getElementById('add-curve-handle')?.addEventListener('click', () => {
-        handleManager.addHandle(createHandle('curve', 'diamond'));
+        const handle = handleManager.createHandle('curve', 'diamond', getRandomPosition());
+        handleManager.addHandle(handle);
     });
 
     document.getElementById('add-label-handle')?.addEventListener('click', () => {
-        handleManager.addHandle(createHandle('label', 'square'));
+        const handle = handleManager.createHandle('label', 'square', getRandomPosition());
+        handleManager.addHandle(handle);
     });
 
     document.getElementById('add-snap-handle')?.addEventListener('click', () => {
-        handleManager.addHandle(createHandle('snap', 'triangle'));
+        const handle = handleManager.createHandle('snap', 'triangle', getRandomPosition());
+        handleManager.addHandle(handle);
     });
 
     document.getElementById('clear-handles')?.addEventListener('click', () => {

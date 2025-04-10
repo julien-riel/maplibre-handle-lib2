@@ -1,0 +1,24 @@
+Implémente une libraire typescript qui permet de définir des poignées pour des outils d'édition sur une carte maplibre-gl. Inclus un exemple qui s'exécute avec vite. 
+
+Les poignées seront représentés par des features sur la carte maplibre
+
+Le calcul géospatiaux sont faits avec turfjs
+
+interface Handle {
+  id: string;
+  type: 'resize' | 'rotate' | 'move' | 'curve' | 'label' | 'snap';
+  shape: 'square' | 'circle' | 'diamond' | 'triangle';
+  position: { lon: number; lat: number };
+  color: string;
+  size: number;
+  cursor: string;
+  visible: boolean;
+  draggable: boolean;
+  constraints?: {
+    snapToGrid?: boolean;
+    lockAxis?: 'x' | 'y';
+    proportional?: boolean;
+  };
+}
+```
+

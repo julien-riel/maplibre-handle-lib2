@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MapLibre Handles Example</title>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+        }
+
+        .handle-type {
+            margin-bottom: 10px;
+        }
+
+        button {
+            margin: 5px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <div id="controls">
+        <div class="handle-type">
+            <button id="add-resize-handle">Add Resize Handle</button>
+            <button id="add-rotate-handle">Add Rotate Handle</button>
+        </div>
+        <div class="handle-type">
+            <button id="add-move-handle">Add Move Handle</button>
+            <button id="add-curve-handle">Add Curve Handle</button>
+        </div>
+        <div class="handle-type">
+            <button id="add-label-handle">Add Label Handle</button>
+            <button id="add-snap-handle">Add Snap Handle</button>
+        </div>
+        <div class="handle-type">
+            <button id="clear-handles">Clear All Handles</button>
+        </div>
+    </div>
+    <script type="module" src="./src/main.ts"></script>
+</body>
+
+</html>

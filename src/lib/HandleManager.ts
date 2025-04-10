@@ -493,4 +493,116 @@ export class HandleManager {
         // @ts-ignore
         this.map.off('mouseleave', this.layerId);
     }
+
+    /**
+     * Generate a unique ID for handles
+     * 
+     * @returns A unique string ID
+     */
+    public generateId(): string {
+        return 'handle-' + Math.random().toString(36).substring(2, 9);
+    }
+
+    /**
+     * Get a color based on handle type
+     * 
+     * @param type Handle type
+     * @returns Color code suitable for the handle type
+     */
+    public getColorForType(type: Handle['type']): string {
+        const colorMap: Record<Handle['type'], string> = {
+            'resize': '#ff5733',
+            'rotate': '#33bbff',
+            'move': '#33ff57',
+            'curve': '#b533ff',
+            'label': '#ffbb33',
+            'snap': '#ff33bb'
+        };
+        return colorMap[type];
+    }
+
+    /**
+     * Get a cursor type based on handle type
+     * 
+     * @param type Handle type
+     * @returns Cursor style suitable for the handle type
+     */
+    public getCursorForType(type: Handle['type']): string {
+        const cursorMap: Record<Handle['type'], string> = {
+            'resize': 'nwse-resize',
+            'rotate': 'crosshair',
+            'move': 'move',
+            'curve': 'pointer',
+            'label': 'text',
+            'snap': 'cell'
+        };
+        return cursorMap[type];
+    }
+
+    /**
+     * Get constraints based on handle type
+     * 
+     * @param type Handle type
+     * @returns Constraints configuration suitable for the handle type
+     */
+    public getConstraintsForType(type: Handle['type']): Handle['constraints'] {
+        switch (type) {
+            case 'resize':
+                return { proportional: true };
+            case 'move':
+                return {};
+            case 'rotate':
+                return {};
+            case 'curve':
+                return {};
+            case 'label':
+                return {};
+            case 'snap':
+                return { snapToGrid: true };
+            default:
+                return {};
+        }
+    }
+
+    /**
+     * Create a handle with the specified type and shape
+     * 
+     * @param type Handle type
+     * @param shape Handle shape
+     * @param position Optional position. If not provided, the current map center will be used
+     * @returns A new Handle object
+     */
+    public createHandle(type: Handle['type'], shape: Handle['shape'], position?: { lon: number; lat: number }): Handle {
+        // If position is not provided, use map center
+        const handlePosition = position || (() => {
+            const center = this.map.getCenter();
+            return { lon: center.lng, lat: center.lat };
+        })();
+
+        return {
+            id: this.generateId(),
+            type,
+            shape,
+            position: handlePosition,
+            color: this.getColorForType(type),
+            size: 1,
+            cursor: this.getCursorForType(type),
+            visible: true,
+            draggable: true,
+            constraints: this.getConstraintsForType(type)
+        };
+    }
+
+    /**
+     * Create and add a handle to the map
+     * 
+     * @param type Handle type
+     * @param shape Handle shape
+     * @param position Optional position
+     * @returns The added handle
+     */
+    public createAndAddHandle(type: Handle['type'], shape: Handle['shape'], position?: { lon: number; lat: number }): Handle {
+        const handle = this.createHandle(type, shape, position);
+        return this.addHandle(handle);
+    }
 }

@@ -49,6 +49,9 @@ export class HandleManager {
      * Initialize the handle manager by setting up the map source and layer
      */
     private initialize(): void {
+        // Add handle shape images to the map
+        this.addHandleShapeImages();
+
         // Add a source for the handles if it doesn't exist
         if (!this.map.getSource(this.sourceId)) {
             this.map.addSource(this.sourceId, {
@@ -79,6 +82,176 @@ export class HandleManager {
 
         // Set up mouse event handlers
         this.setupEventHandlers();
+    }
+
+    /**
+     * Create and add handle shape images to the map
+     */
+    private addHandleShapeImages(): void {
+        // Create images for each handle shape type
+        this.addShapeImage('square', this.createSquareImage());
+        this.addShapeImage('circle', this.createCircleImage());
+        this.addShapeImage('diamond', this.createDiamondImage());
+        this.addShapeImage('triangle', this.createTriangleImage());
+
+        // Set up handler for missing images
+        this.map.on('styleimagemissing', (e) => {
+            // If a shape image is requested but missing, create a default circle
+            if (e.id.includes('square') || e.id.includes('circle') ||
+                e.id.includes('diamond') || e.id.includes('triangle')) {
+                this.addShapeImage(e.id, this.createCircleImage());
+            }
+        });
+    }
+
+    /**
+     * Add a shape image to the map
+     */
+    private addShapeImage(id: string, imageData: ImageData | HTMLImageElement): void {
+        // Check if image already exists to avoid duplicates
+        if (!this.map.hasImage(id)) {
+            this.map.addImage(id, imageData, { sdf: true });
+        }
+    }
+
+    /**
+     * Create a square handle image
+     */
+    private createSquareImage(): ImageData {
+        const size = 32;
+        const centerPoint = size / 2;
+        const squareSize = size * 0.7; // 70% of the canvas size
+        const offset = (size - squareSize) / 2;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            throw new Error('Could not get canvas context');
+        }
+
+        // Clear canvas
+        ctx.clearRect(0, 0, size, size);
+
+        // Draw square
+        ctx.fillStyle = 'white';
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 1;
+
+        ctx.beginPath();
+        ctx.rect(offset, offset, squareSize, squareSize);
+        ctx.fill();
+        ctx.stroke();
+
+        return ctx.getImageData(0, 0, size, size);
+    }
+
+    /**
+     * Create a circle handle image
+     */
+    private createCircleImage(): ImageData {
+        const size = 32;
+        const centerPoint = size / 2;
+        const radius = size * 0.35; // 35% of the canvas size
+
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            throw new Error('Could not get canvas context');
+        }
+
+        // Clear canvas
+        ctx.clearRect(0, 0, size, size);
+
+        // Draw circle
+        ctx.fillStyle = 'white';
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 1;
+
+        ctx.beginPath();
+        ctx.arc(centerPoint, centerPoint, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        return ctx.getImageData(0, 0, size, size);
+    }
+
+    /**
+     * Create a diamond handle image
+     */
+    private createDiamondImage(): ImageData {
+        const size = 32;
+        const centerPoint = size / 2;
+        const diamondSize = size * 0.35; // 35% of the canvas size
+
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            throw new Error('Could not get canvas context');
+        }
+
+        // Clear canvas
+        ctx.clearRect(0, 0, size, size);
+
+        // Draw diamond
+        ctx.fillStyle = 'white';
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 1;
+
+        ctx.beginPath();
+        ctx.moveTo(centerPoint, centerPoint - diamondSize); // Top
+        ctx.lineTo(centerPoint + diamondSize, centerPoint); // Right
+        ctx.lineTo(centerPoint, centerPoint + diamondSize); // Bottom
+        ctx.lineTo(centerPoint - diamondSize, centerPoint); // Left
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        return ctx.getImageData(0, 0, size, size);
+    }
+
+    /**
+     * Create a triangle handle image
+     */
+    private createTriangleImage(): ImageData {
+        const size = 32;
+        const centerPoint = size / 2;
+        const triangleSize = size * 0.35; // 35% of the canvas size
+
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            throw new Error('Could not get canvas context');
+        }
+
+        // Clear canvas
+        ctx.clearRect(0, 0, size, size);
+
+        // Draw triangle
+        ctx.fillStyle = 'white';
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 1;
+
+        ctx.beginPath();
+        ctx.moveTo(centerPoint, centerPoint - triangleSize); // Top
+        ctx.lineTo(centerPoint + triangleSize, centerPoint + triangleSize); // Bottom right
+        ctx.lineTo(centerPoint - triangleSize, centerPoint + triangleSize); // Bottom left
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        return ctx.getImageData(0, 0, size, size);
     }
 
     /**

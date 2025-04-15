@@ -61,6 +61,7 @@ Les outils qui pourront être développés en utilisant cette librairie incluent
 - Outils de filtrage (filtrer les objets géographiques sur la carte)
 
 A TypeScript library for working with MapLibre GL JS, providing utilities for map manipulation, data handling, and more.
+
 ## Example
 
 See the `example` directory for a full demonstration of using the library.

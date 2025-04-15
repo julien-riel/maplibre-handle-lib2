@@ -57,7 +57,7 @@ export interface HandleManagerOptions {
     handleLayerId?: string;
     handleSourceId?: string;
     defaultStyle?: HandleStyle;
-    interactiveHandles?: boolean;
+    // interactiveHandles?: boolean;
 }
 
 /**

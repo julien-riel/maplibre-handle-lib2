@@ -1,7 +1,13 @@
 import 'maplibre-gl/dist/maplibre-gl.css';
 import maplibregl from 'maplibre-gl';
-import { HandleManager, Handle } from '../../src';
 import * as turf from '@turf/turf';
+import {
+    HandleManager,
+    SelectionManager,
+    ToolManager,
+    SelectionTool,
+    SelectionEvent
+} from '../../src';
 
 // Initialize MapLibre GL map
 const map = new maplibregl.Map({
@@ -27,155 +33,193 @@ const map = new maplibregl.Map({
         ]
     },
     center: [2.3522, 48.8566], // Paris
-    zoom: 12
+    zoom: 13
 });
 
-// Initialize our handles manager
+// Initialize our tool managers
 let handleManager: HandleManager;
+let selectionManager: SelectionManager;
+let toolManager: ToolManager;
 
-// Get a random position near the center of the map
-function getRandomPosition() {
-    const center = map.getCenter();
-    const randomLon = center.lng + (Math.random() - 0.5) * 0.05;
-    const randomLat = center.lat + (Math.random() - 0.5) * 0.05;
-    return { lon: randomLon, lat: randomLat };
+// Wait for the map to load before initializing
+map.on('load', () => {
+    // Add sample GeoJSON data to the map
+    addSampleData();
+
+    // Initialize the managers and tools
+    initializeManagers();
+
+    // Add event listeners to the UI controls
+    setupEventListeners();
+});
+
+function addSampleData() {
+    // Add some sample features for selection
+    const parisFeatures: any = {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": {
+                    "name": "Eiffel Tower Area",
+                    "type": "landmark"
+                },
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[
+                        [2.2922, 48.8584],
+                        [2.2932, 48.8584],
+                        [2.2932, 48.8574],
+                        [2.2922, 48.8574],
+                        [2.2922, 48.8584]
+                    ]]
+                }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "name": "Luxembourg Gardens",
+                    "type": "park"
+                },
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[
+                        [2.3354, 48.8460],
+                        [2.3374, 48.8460],
+                        [2.3374, 48.8440],
+                        [2.3354, 48.8440],
+                        [2.3354, 48.8460]
+                    ]]
+                }
+            },
+            {
+                "type": "Feature",
+                "properties": {
+                    "name": "Notre-Dame",
+                    "type": "landmark"
+                },
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[
+                        [2.3494, 48.8530],
+                        [2.3514, 48.8530],
+                        [2.3514, 48.8510],
+                        [2.3494, 48.8510],
+                        [2.3494, 48.8530]
+                    ]]
+                }
+            }
+        ]
+    };
+
+    // Add source for features
+    map.addSource('sample-features', {
+        type: 'geojson',
+        data: parisFeatures
+    });
+
+    // Add the features layer
+    map.addLayer({
+        id: 'sample-features-fill',
+        type: 'fill',
+        source: 'sample-features',
+        paint: {
+            'fill-color': '#0080ff',
+            'fill-opacity': 0.5
+        }
+    });
+
+    // Add outline layer
+    map.addLayer({
+        id: 'sample-features-line',
+        type: 'line',
+        source: 'sample-features',
+        paint: {
+            'line-color': '#0080ff',
+            'line-width': 2
+        }
+    });
 }
 
-// Wait for the map to load before initializing the handle manager
-map.on('load', () => {
-    // Load handle shape images
-    const shapes: Handle['shape'][] = ['square', 'circle', 'diamond', 'triangle'];
-    shapes.forEach(shape => {
-        createShapeImage(map, shape);
-    });
-
-    // Initialize the handle manager
+function initializeManagers() {
+    // Initialize the handle manager (for the tools to use)
     handleManager = new HandleManager({
+        map
+    });
+
+    // Initialize the selection manager
+    selectionManager = new SelectionManager({
         map,
-        interactiveHandles: true
+        selectionColor: '#ffffff',
+        currentSelectionColor: '#ffbb00',
+        previousSelectionColor: '#cccccc',
+        selectionFillOpacity: 0.2,
+        selectionLineWidth: 2
     });
 
-    // Add event listeners to demonstration buttons
-    document.getElementById('add-resize-handle')?.addEventListener('click', () => {
-        const handle = handleManager.createHandle('resize', 'square', getRandomPosition());
-        handleManager.addHandle(handle);
+    // Initialize the tool manager
+    toolManager = new ToolManager({
+        map,
+        handleManager,
+        selectionManager
     });
 
-    document.getElementById('add-rotate-handle')?.addEventListener('click', () => {
-        const handle = handleManager.createHandle('rotate', 'circle', getRandomPosition());
-        handleManager.addHandle(handle);
+    // Create selection tool
+    const selectionTool = new SelectionTool({
+        map,
+        handleManager,
+        selectionManager,
+        selectableLayers: ['sample-features-fill'],
+        multiSelect: false
     });
 
-    document.getElementById('add-move-handle')?.addEventListener('click', () => {
-        const handle = handleManager.createHandle('move', 'circle', getRandomPosition());
-        handleManager.addHandle(handle);
-    });
+    // Register and activate the selection tool
+    toolManager.registerTool(selectionTool);
+    toolManager.activateTool('selection-tool');
 
-    document.getElementById('add-curve-handle')?.addEventListener('click', () => {
-        const handle = handleManager.createHandle('curve', 'diamond', getRandomPosition());
-        handleManager.addHandle(handle);
-    });
+    // Listen for selection changes
+    selectionManager.on('change', handleSelectionChange);
+}
 
-    document.getElementById('add-label-handle')?.addEventListener('click', () => {
-        const handle = handleManager.createHandle('label', 'square', getRandomPosition());
-        handleManager.addHandle(handle);
-    });
-
-    document.getElementById('add-snap-handle')?.addEventListener('click', () => {
-        const handle = handleManager.createHandle('snap', 'triangle', getRandomPosition());
-        handleManager.addHandle(handle);
-    });
-
-    document.getElementById('clear-handles')?.addEventListener('click', () => {
-        handleManager.clearHandles();
-    });
-
-    // Set up event listeners for handle interactions
-    handleManager.on('dragstart', (event) => {
-        console.log(`Handle ${event.handle.id} dragstart at ${event.position.lon}, ${event.position.lat}`);
-    });
-
-    handleManager.on('drag', (event) => {
-        console.log(`Handle ${event.handle.id} drag at ${event.position.lon}, ${event.position.lat}`);
-    });
-
-    handleManager.on('dragend', (event) => {
-        console.log(`Handle ${event.handle.id} dragend at ${event.position.lon}, ${event.position.lat}`);
-    });
-
-    handleManager.on('click', (event) => {
-        console.log(`Handle ${event.handle.id} clicked at ${event.position.lon}, ${event.position.lat}`);
-    });
-});
-
-// Create handle shape images
-function createShapeImage(map: maplibregl.Map, shape: Handle['shape']): void {
-    const size = 64;
-    const center = size / 2;
-
-    const canvas = document.createElement('canvas');
-    canvas.width = size;
-    canvas.height = size;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    ctx.clearRect(0, 0, size, size);
-
-    // Draw shape
-    ctx.fillStyle = '#ffffff';
-    ctx.strokeStyle = '#000000';
-    ctx.lineWidth = 2;
-
-    switch (shape) {
-        case 'square':
-            const squareSize = size * 0.7;
-            const squareOffset = (size - squareSize) / 2;
-            ctx.beginPath();
-            ctx.rect(squareOffset, squareOffset, squareSize, squareSize);
-            ctx.fill();
-            ctx.stroke();
-            break;
-
-        case 'circle':
-            ctx.beginPath();
-            ctx.arc(center, center, size * 0.35, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
-            break;
-
-        case 'diamond':
-            ctx.beginPath();
-            ctx.moveTo(center, center - size * 0.35);
-            ctx.lineTo(center + size * 0.35, center);
-            ctx.lineTo(center, center + size * 0.35);
-            ctx.lineTo(center - size * 0.35, center);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-            break;
-
-        case 'triangle':
-            ctx.beginPath();
-            ctx.moveTo(center, center - size * 0.35);
-            ctx.lineTo(center + size * 0.3, center + size * 0.25);
-            ctx.lineTo(center - size * 0.3, center + size * 0.25);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
-            break;
+function setupEventListeners() {
+    // Tool selection buttons
+    const selectionToolBtn = document.getElementById('selection-tool');
+    if (selectionToolBtn) {
+        selectionToolBtn.addEventListener('click', () => {
+            toolManager.activateTool('selection-tool');
+            setActiveButton(selectionToolBtn);
+        });
     }
 
-    const imageData = ctx.getImageData(0, 0, size, size);
-
-    // Create an array with RGBA values (required by MapLibre)
-    const data = new Uint8Array(size * size * 4);
-
-    // Copy pixel data
-    for (let i = 0; i < imageData.data.length; i++) {
-        data[i] = imageData.data[i];
+    // Clear selection button
+    const clearSelectionBtn = document.getElementById('clear-selection');
+    if (clearSelectionBtn) {
+        clearSelectionBtn.addEventListener('click', () => {
+            selectionManager.clearSelection();
+        });
     }
+}
 
-    // Add the image to the map
-    map.addImage(shape, { width: size, height: size, data: data });
+function setActiveButton(activeButton: HTMLElement) {
+    // Remove active class from all buttons
+    document.querySelectorAll('#controls button').forEach(button => {
+        button.classList.remove('active');
+    });
+
+    // Add active class to the clicked button
+    activeButton.classList.add('active');
+}
+
+function handleSelectionChange(event: SelectionEvent) {
+    const selectionInfo = document.getElementById('selection-info');
+    if (!selectionInfo) return;
+
+    if (event.selected.length === 0) {
+        selectionInfo.textContent = 'None';
+    } else {
+        const names = event.selected.map(feature =>
+            feature.feature.properties?.name || 'Unnamed feature'
+        );
+        selectionInfo.textContent = names.join(', ');
+    }
 }

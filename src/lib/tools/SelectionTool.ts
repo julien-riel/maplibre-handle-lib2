@@ -1,8 +1,8 @@
 import maplibregl from 'maplibre-gl';
 import * as turf from '@turf/turf';
-import { Handle } from '../';
 import { BaseTool } from './BaseTool';
 import { ToolOptions } from './types';
+import { Handle } from '../types';
 
 /**
  * Options for creating a selection tool
@@ -258,7 +258,7 @@ export class SelectionTool extends BaseTool {
     /**
      * Query features at a specific point
      */
-    private queryFeaturesAtPoint(point: maplibregl.Point): maplibregl.MapboxGeoJSONFeature[] {
+    private queryFeaturesAtPoint(point: maplibregl.Point): maplibregl.MapGeoJSONFeature[] {
         // Filter to only include selectable layers
         const layers = this.selectableLayers.length > 0
             ? this.selectableLayers
@@ -270,7 +270,7 @@ export class SelectionTool extends BaseTool {
     /**
      * Query features within a bounding box
      */
-    private queryFeaturesInBox(bounds: maplibregl.LngLatBounds): maplibregl.MapboxGeoJSONFeature[] {
+    private queryFeaturesInBox(bounds: maplibregl.LngLatBounds): maplibregl.MapGeoJSONFeature[] {
         // Convert bounds to points on the screen
         const sw = this.map.project(bounds.getSouthWest());
         const ne = this.map.project(bounds.getNorthEast());

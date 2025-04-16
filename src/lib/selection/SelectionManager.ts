@@ -1,6 +1,7 @@
 import maplibregl from 'maplibre-gl';
 import * as turf from '@turf/turf';
 import {
+    Bbox,
     SelectedFeature,
     SelectionBounds,
     SelectionEvent,
@@ -148,7 +149,7 @@ export class SelectionManager {
         const featureCollection = turf.featureCollection(features);
 
         // Calculate bbox
-        const bbox = turf.bbox(featureCollection);
+        const bbox = turf.bbox(featureCollection) as Bbox;
         const center = turf.center(featureCollection).geometry.coordinates as [number, number];
 
         // Calculate area and perimeter
@@ -162,7 +163,7 @@ export class SelectionManager {
                 area += turf.area(feature);
 
                 // Add to perimeter
-                const lines = turf.polygonToLine(feature);
+                const lines = turf.polygonToLine(feature.geometry);
                 if (Array.isArray(lines)) {
                     lines.forEach(line => {
                         perimeter += turf.length(line, { units: 'meters' });

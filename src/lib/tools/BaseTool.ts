@@ -1,7 +1,8 @@
 import maplibregl from 'maplibre-gl';
-import { Handle, HandleEvent, HandleManager } from '../';
+import { HandleManager } from '../HandleManager';
 import { SelectionManager } from '../selection/SelectionManager';
 import { Tool, ToolEvent, ToolEventListener, ToolEventType, ToolOptions, ToolState } from './types';
+import { Handle, HandleEvent } from '../types';
 
 /**
  * Abstract base class for map editing tools

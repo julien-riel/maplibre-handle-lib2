@@ -2,7 +2,7 @@ import maplibregl from 'maplibre-gl';
 import * as turf from '@turf/turf';
 import { BaseTool } from './BaseTool';
 import { ToolOptions } from './types';
-import { Handle } from '../types';
+import { Handle, HandleEvent } from '../types';
 
 /**
  * Options for creating a selection tool
@@ -22,6 +22,14 @@ export class SelectionTool extends BaseTool {
     private dragCurrent: maplibregl.LngLat | null = null;
     private dragBoxLayer: string = 'maplibre-drag-box-layer';
     private dragBoxSource: string = 'maplibre-drag-box-source';
+
+    // New properties to track handles and interactions
+    private activeHandle: Handle | null = null;
+    private handleListeners: { type: string, listener: (event: HandleEvent) => void }[] = [];
+    private cornerHandles: Handle[] = [];
+    private edgeHandles: Handle[] = [];
+    private centerHandle: Handle | null = null;
+    private initialSelectionBounds: any = null;
 
     /**
      * Creates a new SelectionTool instance
@@ -77,6 +85,9 @@ export class SelectionTool extends BaseTool {
                 }
             });
         }
+
+        // Subscribe to handle events
+        this.subscribeToHandleEvents();
     }
 
     /**
@@ -85,6 +96,15 @@ export class SelectionTool extends BaseTool {
     public override deactivate(): void {
         // Clean up drag box
         this.resetDragBox();
+
+        // Remove handle event listeners
+        this.unsubscribeFromHandleEvents();
+
+        // Clear handles references
+        this.cornerHandles = [];
+        this.edgeHandles = [];
+        this.centerHandle = null;
+        this.activeHandle = null;
 
         // Optionally remove the drag box layer and source
         if (this.map.getLayer(this.dragBoxLayer)) {
@@ -96,6 +116,155 @@ export class SelectionTool extends BaseTool {
         }
 
         super.deactivate();
+    }
+
+    /**
+     * Subscribe to handle events
+     */
+    private subscribeToHandleEvents(): void {
+        // Handle drag start event
+        const dragStartListener = (event: HandleEvent) => {
+            this.activeHandle = event.handle;
+            this.initialSelectionBounds = this.selectionManager.getSelectionBounds();
+
+            // Set appropriate cursor based on handle type
+            if (event.handle.type === 'move') {
+                this.map.getCanvas().style.cursor = 'move';
+            } else if (event.handle.type === 'resize') {
+                // Set resize cursor based on handle position
+                const handleShape = event.handle.shape;
+                if (handleShape === 'square') {
+                    // Corner handles
+                    const position = event.handle.position;
+                    const bounds = this.initialSelectionBounds?.bbox;
+                    if (bounds) {
+                        const isTop = Math.abs(position.lat - bounds[3]) < 0.0001;
+                        const isBottom = Math.abs(position.lat - bounds[1]) < 0.0001;
+                        const isLeft = Math.abs(position.lon - bounds[0]) < 0.0001;
+                        const isRight = Math.abs(position.lon - bounds[2]) < 0.0001;
+
+                        if ((isTop && isLeft) || (isBottom && isRight)) {
+                            this.map.getCanvas().style.cursor = 'nwse-resize';
+                        } else {
+                            this.map.getCanvas().style.cursor = 'nesw-resize';
+                        }
+                    }
+                } else {
+                    // Edge handles
+                    const position = event.handle.position;
+                    const bounds = this.initialSelectionBounds?.bbox;
+                    if (bounds) {
+                        const isTop = Math.abs(position.lat - bounds[3]) < 0.0001;
+                        const isBottom = Math.abs(position.lat - bounds[1]) < 0.0001;
+                        const isLeft = Math.abs(position.lon - bounds[0]) < 0.0001;
+                        const isRight = Math.abs(position.lon - bounds[2]) < 0.0001;
+
+                        if (isTop || isBottom) {
+                            this.map.getCanvas().style.cursor = 'ns-resize';
+                        } else {
+                            this.map.getCanvas().style.cursor = 'ew-resize';
+                        }
+                    }
+                }
+            }
+        };
+
+        // Handle drag event
+        const dragListener = (event: HandleEvent) => {
+            if (!this.activeHandle || !this.initialSelectionBounds) return;
+
+            const handle = event.handle;
+            const position = event.position;
+
+            if (handle.type === 'move') {
+                // Move all selected features
+                this.moveSelection(position);
+            } else if (handle.type === 'resize') {
+                // Resize the selection based on which handle is being dragged
+                this.resizeSelection(handle, position);
+            }
+        };
+
+        // Handle drag end event
+        const dragEndListener = (event: HandleEvent) => {
+            // Reset cursor
+            this.map.getCanvas().style.cursor = this.cursor;
+
+            // Apply final transformation to selected features
+            if (this.activeHandle) {
+                // Finalize any transformations
+                this.finalizeTransformation();
+
+                // Reset active handle and bounds
+                this.activeHandle = null;
+                this.initialSelectionBounds = null;
+
+                // Recreate handles after transformation
+                this.createHandlesForSelection();
+            }
+        };
+
+        // Register the listeners with the HandleManager
+        this.handleManager.on('dragstart', dragStartListener);
+        this.handleManager.on('drag', dragListener);
+        this.handleManager.on('dragend', dragEndListener);
+
+        // Store listeners for cleanup
+        this.handleListeners = [
+            { type: 'dragstart', listener: dragStartListener },
+            { type: 'drag', listener: dragListener },
+            { type: 'dragend', listener: dragEndListener }
+        ];
+    }
+
+    /**
+     * Unsubscribe from handle events
+     */
+    private unsubscribeFromHandleEvents(): void {
+        this.handleListeners.forEach(({ type, listener }) => {
+            this.handleManager.off(type as any, listener);
+        });
+        this.handleListeners = [];
+    }
+
+    /**
+     * Move the selection based on the handle drag
+     */
+    private moveSelection(position: { lon: number; lat: number }): void {
+        // Implement feature movement logic
+        // This method would update the preview of where features will move to
+        // but not actually modify the source data yet
+
+        // For preview, you could create temporary layers showing where
+        // the features will end up after the move
+
+        // You would track the movement delta from initialSelectionBounds center
+        // to current position
+    }
+
+    /**
+     * Resize the selection based on the handle drag
+     */
+    private resizeSelection(handle: Handle, position: { lon: number; lat: number }): void {
+        // Implement resize logic based on which handle is being dragged
+        // You would calculate a scale factor based on the initial bounds and 
+        // the current position of the handle
+
+        // Different logic would apply based on:
+        // - If it's a corner handle (scale in both directions)
+        // - If it's an edge handle (scale in one direction only)
+        // - Whether any modifier keys are pressed (preserve aspect ratio, etc.)
+    }
+
+    /**
+     * Finalize the transformation by applying changes to feature data
+     */
+    private finalizeTransformation(): void {
+        // Apply the actual transformation to the source data
+        // This would depend on the specific transformation being performed
+
+        // For move: apply offset to all vertices
+        // For resize: apply scale to all vertices
     }
 
     /**
@@ -293,6 +462,11 @@ export class SelectionTool extends BaseTool {
         // Clear any existing handles
         this.clearHandles();
 
+        // Clear handle references
+        this.cornerHandles = [];
+        this.edgeHandles = [];
+        this.centerHandle = null;
+
         // Get the selection bounds
         const bounds = this.selectionManager.getSelectionBounds();
         if (!bounds) {
@@ -318,19 +492,19 @@ export class SelectionTool extends BaseTool {
         const center = { lon: bounds.center[0], lat: bounds.center[1] };
 
         // Add resize handles at corners (squares)
-        this.addHandle('resize', 'square', nw);
-        this.addHandle('resize', 'square', ne);
-        this.addHandle('resize', 'square', se);
-        this.addHandle('resize', 'square', sw);
+        this.cornerHandles.push(this.addHandle('resize', 'square', nw));
+        this.cornerHandles.push(this.addHandle('resize', 'square', ne));
+        this.cornerHandles.push(this.addHandle('resize', 'square', se));
+        this.cornerHandles.push(this.addHandle('resize', 'square', sw));
 
         // Add resize handles at midpoints (circles)
-        this.addHandle('resize', 'circle', n);
-        this.addHandle('resize', 'circle', e);
-        this.addHandle('resize', 'circle', s);
-        this.addHandle('resize', 'circle', w);
+        this.edgeHandles.push(this.addHandle('resize', 'circle', n));
+        this.edgeHandles.push(this.addHandle('resize', 'circle', e));
+        this.edgeHandles.push(this.addHandle('resize', 'circle', s));
+        this.edgeHandles.push(this.addHandle('resize', 'circle', w));
 
         // Add move handle at center
-        this.addHandle('move', 'circle', center);
+        this.centerHandle = this.addHandle('move', 'circle', center);
     }
 
     /**

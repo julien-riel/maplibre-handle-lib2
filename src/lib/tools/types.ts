@@ -1,6 +1,6 @@
 import maplibregl from 'maplibre-gl';
-import { HandleManager } from '../HandleManager';
-import { SelectionManager } from '../selection/SelectionManager';
+import { HandleManager } from '../handle-manager';
+import { SelectionManager } from '../selection/selection-manager';
 import { SelectedFeature } from '../selection/types';
 import { Handle, HandleEvent } from '../types';
 

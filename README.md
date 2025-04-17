@@ -40,13 +40,13 @@ mettent la prévisulisation à jour. Lorsque le bouton est relâché, la prévis
  - Sélection courante: blanc
  - Sélection précédente: gris
 
-## Conventoin de couleurs pour les 'handles'
+## Convention de couleurs pour les 'handles'
   
   - 'Handles' sélectionnés: jaume, contour noir
   - 'Handles' non sélectionnés: blanc, contour noir
   - Indique que peut être supprimé: contour rouge
 
-## Conventions de formes pour les handles
+## Convention de formes pour les handles
  
  - 'Handles' carrés: peut être déplacés dans les deux axes (x et y)
  - 'Handles' ronds: peut être déplacés dans un axe uniquement (x ou y)

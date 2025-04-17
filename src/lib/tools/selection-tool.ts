@@ -1,6 +1,6 @@
 import maplibregl from 'maplibre-gl';
 import * as turf from '@turf/turf';
-import { BaseTool } from './BaseTool';
+import { BaseTool } from './base-tool';
 import { ToolOptions } from './types';
 import { Handle, HandleEvent } from '../types';
 

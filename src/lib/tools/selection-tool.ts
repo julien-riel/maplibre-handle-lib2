@@ -492,10 +492,14 @@ export class SelectionTool extends BaseTool {
         const center = { lon: bounds.center[0], lat: bounds.center[1] };
 
         // Add resize handles at corners (squares)
-        this.cornerHandles.push(this.addHandle('resize', 'square', nw));
-        this.cornerHandles.push(this.addHandle('resize', 'square', ne));
-        this.cornerHandles.push(this.addHandle('resize', 'square', se));
-        this.cornerHandles.push(this.addHandle('resize', 'square', sw));
+        const nwHandle = this.addHandle('resize', 'square', nw)
+        this.cornerHandles.push(nwHandle);
+        const neHandle = this.addHandle('resize', 'square', ne)
+        this.cornerHandles.push(neHandle);
+        const seHandle = this.addHandle('resize', 'square', se)
+        this.cornerHandles.push(seHandle);
+        const swHandle = this.addHandle('resize', 'square', sw)
+        this.cornerHandles.push(swHandle);
 
         // Add resize handles at midpoints (circles)
         this.edgeHandles.push(this.addHandle('resize', 'circle', n));

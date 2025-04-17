@@ -518,6 +518,15 @@ export class HandleManager {
         return removed;
     }
 
+
+    /**
+     * Remove all handles from the map
+     */
+    public clearAllHandles(): void {
+        this.handles.clear();
+        this.updateSource();
+    }
+
     /**
      * Update an existing handle
      * 
@@ -567,6 +576,64 @@ export class HandleManager {
      */
     public setHandleVisibility(handleId: string, visible: boolean): Handle | null {
         return this.updateHandle(handleId, { visible });
+    }
+
+    /**
+     * Hide a handle by ID
+     * 
+     * @param handleId ID of the handle to hide
+     * @returns The updated handle or null if not found
+     */
+    public hideHandle(handleId: string): Handle | null {
+        return this.setHandleVisibility(handleId, false);
+    }
+
+    /**
+     * Show a handle by ID
+     * 
+     * @param handleId ID of the handle to show
+     * @returns The updated handle or null if not found
+     */
+    public showHandle(handleId: string): Handle | null {
+        return this.setHandleVisibility(handleId, true);
+    }
+
+    /**
+     * Hide all handles
+     * 
+     * @returns Array of updated handles
+     */
+    public hideAllHandles(): Handle[] {
+        const updatedHandles: Handle[] = [];
+
+        this.handles.forEach((handle, id) => {
+            const updatedHandle = this.setHandleVisibility(id, false);
+            if (updatedHandle) {
+                updatedHandles.push(updatedHandle);
+            }
+        });
+
+        this.updateSource();
+        return updatedHandles;
+    }
+
+    /**
+     * Show all handles
+     * 
+     * @returns Array of updated handles
+     */
+    public showAllHandles(): Handle[] {
+        const updatedHandles: Handle[] = [];
+
+        this.handles.forEach((handle, id) => {
+            const updatedHandle = this.setHandleVisibility(id, true);
+            if (updatedHandle) {
+                updatedHandles.push(updatedHandle);
+            }
+        });
+
+        this.updateSource();
+        return updatedHandles;
     }
 
     /**

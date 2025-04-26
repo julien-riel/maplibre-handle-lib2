@@ -17,7 +17,6 @@ export abstract class BaseTool implements Tool {
     protected map: maplibregl.Map;
     protected handleManager: HandleManager;
     protected selectionManager: SelectionManager;
-    protected handles: Handle[] = [];
     protected options: ToolOptions;
     protected eventListeners: Map<ToolEventType, Set<ToolEventListener>> = new Map();
 
@@ -97,10 +96,7 @@ export abstract class BaseTool implements Tool {
      * Remove all handles created by this tool
      */
     protected clearHandles(): void {
-        this.handles.forEach(handle => {
-            this.handleManager.removeHandle(handle.id);
-        });
-        this.handles = [];
+        this.handleManager.clearAllHandles();
     }
 
     /**

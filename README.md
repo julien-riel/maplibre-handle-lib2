@@ -1,5 +1,8 @@
 # MapLibre Tools
 
+Todo: rendre optionnel la mise à jour de la source si on change
+en boucle. (e.g hide, show, ALL handler.)
+
 C'est une librairie TypeScript pour MapLibre GL JS, qui fournit des outils pour éditer des objets géographiques.
 
 Les outils permettent d'éditer une sélection d'objets géographiques sur une carte MapLibre GL JS. Ils sont analogues aux outils dans Abode Illustrator, Inkscape, Autodesk, etc.

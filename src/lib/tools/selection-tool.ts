@@ -508,7 +508,7 @@ export class SelectionTool extends BaseTool {
         this.edgeHandles.push(this.addHandle('resize', 'circle', w));
 
         // Add move handle at center
-        this.centerHandle = this.addHandle('move', 'circle', center);
+        // this.centerHandle = this.addHandle('move', 'circle', center);
     }
 
     /**
@@ -517,8 +517,6 @@ export class SelectionTool extends BaseTool {
     private addHandle(type: Handle['type'], shape: Handle['shape'], position: { lon: number; lat: number }): Handle {
         const handle = this.handleManager.createHandle(type, shape, position);
         this.handleManager.addHandle(handle);
-        this.handles.push(handle);
-
         return handle;
     }
 }
